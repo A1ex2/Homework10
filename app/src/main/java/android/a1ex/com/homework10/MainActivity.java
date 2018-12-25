@@ -53,16 +53,6 @@ public class MainActivity extends AppCompatActivity {
             ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
             @Override
             public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder targer) {
-//                final int fromPos = viewHolder.getAdapterPosition();
-//                final int toPos = targer.getAdapterPosition();
-//
-//                Group group = mGroups.get(fromPos);
-//                mGroups.remove(fromPos);
-//                mGroups.add(toPos, group);
-//
-//                adapter.notifyItemChanged(fromPos, toPos);
-//
-//                return true;
                 return false;
             }
 

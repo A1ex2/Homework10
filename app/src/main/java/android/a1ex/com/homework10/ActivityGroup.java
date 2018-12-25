@@ -1,9 +1,13 @@
 package android.a1ex.com.homework10;
 
 import android.content.Intent;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.helper.ItemTouchHelper;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -18,9 +22,13 @@ public class ActivityGroup extends AppCompatActivity {
 
     private DataBaseHelper helper;
     private ArrayList<Student> mStudents = new ArrayList<>();
-    private RecyclerAdapter adapter;
+    private RecyclerAdapterStudents adapter;
 
     private Group mGroup;
+
+    public static final String EXTRA_STUDENT = "android.a1ex.com.homework10.extra.STUDENT";
+    public static final String EXTRA_GROUP = "android.a1ex.com.homework10.extra.GROUP";
+    private static final int REQUEST_CODE = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,22 +44,72 @@ public class ActivityGroup extends AppCompatActivity {
         mGroup = intent.getParcelableExtra(MainActivity.EXTRA_GROUP);
 
         groupName.setText(mGroup.name);
+
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
+        recyclerStudent.setLayoutManager(layoutManager);
+
+        adapter = new RecyclerAdapterStudents(this, R.layout.student_item, mStudents);
+        recyclerStudent.setAdapter(adapter);
+
+        adapter.setActionListener(new RecyclerAdapterStudents.ActionListener() {
+            @Override
+            public void onClick(Student student) {
+                Intent intent = new Intent(ActivityGroup.this, EditActivityStudent.class);
+                intent.putExtra(EXTRA_STUDENT, student.id);
+                intent.putExtra(EXTRA_GROUP, mGroup.id);
+                startActivityForResult(intent, REQUEST_CODE);
+            }
+        });
+
+        initList();
+
+        ItemTouchHelper.SimpleCallback itemTouchCallback = new ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP|ItemTouchHelper.DOWN,
+                ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
+            @Override
+            public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder targer) {
+                return false;
+            }
+
+            @Override
+            public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int i) {
+                final int fromPos = viewHolder.getAdapterPosition();
+                Student student = mStudents.get(fromPos);
+                helper.deleteStudent(student);
+                Toast.makeText(ActivityGroup.this, "удалено " + student.toString(), Toast.LENGTH_LONG).show();
+
+                initList();
+            }
+        };
+
+        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(itemTouchCallback);
+        itemTouchHelper.attachToRecyclerView(recyclerStudent);
+
     }
 
     public void onClickAddStudent(View view) {
         switch (view.getId()) {
             case R.id.addStudent:
+                if (mGroup.id == -1){
+                    mGroup.name = String.valueOf(groupName.getText());
+                    long id = mGroup.id;
+                    id = helper.insertGroup(mGroup);
+                    Toast.makeText(this, "Группа добавлена", Toast.LENGTH_LONG).show();
+                    mGroup.id = id;
+                }
 
-                long id = helper.insertStudent(new Student("Ivan", "Ivanov", 22), mGroup.id);
-                Toast.makeText(this, String.valueOf(id), Toast.LENGTH_LONG).show();
+                Intent intent = new Intent(ActivityGroup.this, EditActivityStudent.class);
+                long mId = -1;
+                intent.putExtra(EXTRA_STUDENT, mId);
+                intent.putExtra(EXTRA_GROUP, mGroup.id);
+                startActivityForResult(intent, REQUEST_CODE);
 
-                initList();
                 break;
         }
     }
 
     private void initList() {
-        ArrayList<Student> items = helper.getStudents();
+        ArrayList<Student> items = helper.getGroupStudents(mGroup);
+//        ArrayList<Student> items = helper.getStudents();
 
         mStudents.clear();
         mStudents.addAll(items);
@@ -90,5 +148,16 @@ public class ActivityGroup extends AppCompatActivity {
         setResult(RESULT_OK, intent);
 
         finish();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (resultCode == RESULT_OK || requestCode == REQUEST_CODE) {
+            if (data != null) {
+                initList();
+            }
+        }
     }
 }

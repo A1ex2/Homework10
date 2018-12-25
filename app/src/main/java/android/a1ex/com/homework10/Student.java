@@ -12,12 +12,14 @@ public class Student implements Parcelable {
     public static final String COLUM_ID_GROUP = "_idGroup";
 
     public long id;
+    public long idGroup;
 
     public String firstName;
     public String lastName;
     public int age;
 
     public Student() {
+        this.id = -1;
     }
 
     public Student(String firstName, String lastName, int age) {
@@ -35,7 +37,8 @@ public class Student implements Parcelable {
 //                ", age=" + age +
 //                '}';
 
-        return String.format("%d %d, возраст %f", firstName, lastName, age);
+        return "" + firstName + " " + lastName + ", возраст " + age;
+//        return String.format("%d %d, возраст %f", firstName, lastName, age);
     }
 
     @Override
