@@ -33,6 +33,13 @@ public class DataBaseHelper extends SQLiteOpenHelper {
                 + Group.TABLE_NAME + "(" + Student.COLUM_ID + "))");
     }
 
+    public void deleteAll(){
+        ArrayList<Group> mGroups = getGroups();
+        for (int i = 0; i < mGroups.size(); i++){
+            deleteGroup(mGroups.get(i));
+        }
+    }
+
     public long insertGroup(Group group){
         SQLiteDatabase db = getReadableDatabase();
         long id = 0;
@@ -48,6 +55,26 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         }
 
         return id;
+    }
+
+    public void addGroups(ArrayList<Group> mGroups){
+        SQLiteDatabase db = getReadableDatabase();
+
+        for (int i = 0; i < mGroups.size(); i++){
+            long id = 0;
+
+            Group group = mGroups.get(i);
+            try {
+                ContentValues values = new ContentValues();
+
+                values.put(Group.COLUM_ID, group.id);
+                values.put(Group.COLUM_NAME, group.name);
+
+                id = db.insert(Group.TABLE_NAME, null, values);
+            } catch (Exception e){
+                e.printStackTrace();
+            }
+        }
     }
 
     public ArrayList<Group> getGroups(){
@@ -99,7 +126,6 @@ public class DataBaseHelper extends SQLiteOpenHelper {
     public void deleteGroup(Group group){
         ArrayList<Student> students = getGroupStudents(group);
         for (int i = 0; i < students.size(); i++){
-            String nS = students.get(i).toString();
             deleteStudent(students.get(i));
         }
 
@@ -107,7 +133,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         db.delete(Group.TABLE_NAME, Group.COLUM_ID + "=" + group.id, null);
     }
 
-    public long insertStudent(Student student){
+    public long insertStudent(Student student) {
         SQLiteDatabase db = getReadableDatabase();
         long id = 0;
 
@@ -120,11 +146,33 @@ public class DataBaseHelper extends SQLiteOpenHelper {
             values.put(Student.COLUM_ID_GROUP, student.idGroup);
 
             id = db.insert(Student.TABLE_NAME, null, values);
-        } catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
         return id;
+    }
+
+    public void addStudents(ArrayList<Student> mStudents) {
+        SQLiteDatabase db = getReadableDatabase();
+        for (int i = 0; i < mStudents.size(); i++) {
+            Student student = mStudents.get(i);
+
+            try {
+                long id = 0;
+                ContentValues values = new ContentValues();
+
+                values.put(Student.COLUM_ID, student.id);
+                values.put(Student.COLUM_FIRST_NAME, student.firstName);
+                values.put(Student.COLUM_LAST_NAME, student.lastName);
+                values.put(Student.COLUM_AGE, student.age);
+                values.put(Student.COLUM_ID_GROUP, student.idGroup);
+
+                id = db.insert(Student.TABLE_NAME, null, values);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public Student getStudent(long id) {

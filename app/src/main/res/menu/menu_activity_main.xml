@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/itemPreferences"
+        android:title="Настройки" />
+    <group android:id="@+id/backup">
+        <item
+            android:id="@+id/makeBackup"
+            android:title="Забекапить" />
+        <item
+            android:id="@+id/restoreBackup"
+            android:title="Восстановить" />
+    </group>
+</menu>

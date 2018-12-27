@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <CheckBoxPreference
+        android:defaultValue="true"
+        android:key="check_box_backup"
+        android:title="Разрешено использовать бекапы" />
+    <EditTextPreference
+        android:defaultValue="МойФайлБекапа"
+        android:key="edit_text_name_backup"
+        android:selectAllOnFocus="true"
+        android:singleLine="true"
+        android:summary="по умолчанию имя файла 'МойФайлБекапа'"
+        android:title="Имя файла бекапа" />
+</PreferenceScreen>

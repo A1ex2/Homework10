@@ -3,6 +3,8 @@ package android.a1ex.com.homework10;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.google.gson.annotations.SerializedName;
+
 public class Student implements Parcelable {
     public static final String TABLE_NAME = "Students";
     public static final String COLUM_FIRST_NAME = "FirstName";
@@ -11,11 +13,16 @@ public class Student implements Parcelable {
     public static final String COLUM_ID = "_id";
     public static final String COLUM_ID_GROUP = "_idGroup";
 
+    @SerializedName("id")
     public long id;
+    @SerializedName("idGroup")
     public long idGroup;
 
+    @SerializedName("FirstName")
     public String firstName;
+    @SerializedName("LastName")
     public String lastName;
+    @SerializedName("Age")
     public int age;
 
     public Student() {

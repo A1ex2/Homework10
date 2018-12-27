@@ -3,12 +3,17 @@ package android.a1ex.com.homework10;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.google.gson.annotations.SerializedName;
+
 public class Group implements Parcelable {
     public static final String TABLE_NAME = "Groups";
     public static final String COLUM_NAME = "NameGroup";
     public static final String COLUM_ID = "_id";
 
+    @SerializedName("id")
     public long id;
+
+    @SerializedName("Name")
     public String name;
 
     public Group() {
