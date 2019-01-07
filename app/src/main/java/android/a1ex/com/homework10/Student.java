@@ -55,12 +55,16 @@ public class Student implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
+        dest.writeLong(this.id);
+        dest.writeLong(this.idGroup);
         dest.writeString(this.firstName);
         dest.writeString(this.lastName);
         dest.writeInt(this.age);
     }
 
     protected Student(Parcel in) {
+        this.id = in.readLong();
+        this.idGroup = in.readLong();
         this.firstName = in.readString();
         this.lastName = in.readString();
         this.age = in.readInt();

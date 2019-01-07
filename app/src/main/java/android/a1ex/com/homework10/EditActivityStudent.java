@@ -1,16 +1,18 @@
 package android.a1ex.com.homework10;
 
 import android.content.Intent;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class EditActivityStudent extends AppCompatActivity {
-    private DataBaseHelper helper;
+import java.util.ArrayList;
 
+public class EditActivityStudent extends AppCompatActivity {
     public TextView firstName;
     public TextView lastName;
     public TextView age;
@@ -23,8 +25,6 @@ public class EditActivityStudent extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit_student);
-
-        helper = new DataBaseHelper(this);
 
         firstName = findViewById(R.id.editFirstName);
         lastName = findViewById(R.id.editLastName);
@@ -39,10 +39,7 @@ public class EditActivityStudent extends AppCompatActivity {
             mStudent = new Student();
 
         } else {
-            mStudent = helper.getStudent(id);
-            firstName.setText(mStudent.firstName);
-            lastName.setText(mStudent.lastName);
-            age.setText(String.valueOf(mStudent.age));
+            MyIntentService.getStudent(this, id);
         }
     }
 
@@ -70,23 +67,47 @@ public class EditActivityStudent extends AppCompatActivity {
         try {
             mAge = Integer.valueOf(age.getText().toString());
         } catch (
-                NumberFormatException e)
-        {
+                NumberFormatException e) {
             mAge = 0;
         }
         mStudent.age = mAge;
         mStudent.idGroup = idGroup;
         if (id == -1) {
-            id = helper.insertStudent(mStudent);
-            Toast.makeText(this, "Студент добавлен", Toast.LENGTH_LONG).show();
+            MyIntentService.saveStudent(this, mStudent);
         } else {
-            helper.updateStudent(mStudent);
-            Toast.makeText(this, "Студент изменен", Toast.LENGTH_LONG).show();
+            MyIntentService.updateStudent(this, mStudent);
         }
+    }
 
-        Intent intent = new Intent();
-        setResult(RESULT_OK, intent);
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
 
-        finish();
+        if (requestCode == MyIntentService.REQUEST_CODE_GET_STUDENT) {
+            if (resultCode == RESULT_OK) {
+                if (data != null) {
+                    mStudent = data.getParcelableExtra(MyIntentService.EXTRA_GET_STUDENT);
+                    firstName.setText(mStudent.firstName);
+                    lastName.setText(mStudent.lastName);
+                    age.setText(String.valueOf(mStudent.age));
+                }
+            }
+
+        } else if (requestCode == MyIntentService.REQUEST_CODE_SAVE_STUDENT){
+            if (resultCode == RESULT_OK) {
+                Toast.makeText(this, "Студент добавлен", Toast.LENGTH_LONG).show();
+                Intent intent = new Intent();
+                setResult(RESULT_OK, intent);
+                finish();
+            }
+
+        } else if (requestCode == MyIntentService.REQUEST_CODE_UPDATE_STUDENT){
+            if (resultCode == RESULT_OK) {
+                Toast.makeText(this, "Студент изменен", Toast.LENGTH_LONG).show();
+                Intent intent = new Intent();
+                setResult(RESULT_OK, intent);
+                finish();
+            }
+        }
     }
 }

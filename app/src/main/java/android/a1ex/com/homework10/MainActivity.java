@@ -19,6 +19,7 @@ import android.support.v7.widget.helper.ItemTouchHelper;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.google.gson.Gson;
@@ -33,8 +34,8 @@ import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
-    private DataBaseHelper helper;
     private RecyclerView recycler;
+    private ProgressBar mProgressBar;
     private ArrayList<Group> mGroups = new ArrayList<>();
     private RecyclerAdapter adapter;
 
@@ -47,8 +48,10 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        mProgressBar = findViewById(R.id.progressBar);
+        mProgressBar.setVisibility(View.INVISIBLE);
+
         recycler = findViewById(R.id.recycler);
-        helper = new DataBaseHelper(this);
 
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         recycler.setLayoutManager(layoutManager);
@@ -78,7 +81,7 @@ public class MainActivity extends AppCompatActivity {
             public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int i) {
                 final int fromPos = viewHolder.getAdapterPosition();
                 Group group = mGroups.get(fromPos);
-                helper.deleteGroup(group);
+                MyIntentService.deleteGroup(MainActivity.this, group);
                 Toast.makeText(MainActivity.this, "удалено " + group.name, Toast.LENGTH_LONG).show();
 
                 initList();
@@ -118,17 +121,7 @@ public class MainActivity extends AppCompatActivity {
 
                 if (hasPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
                     if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
-                        File folder = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + "/MyFolder");
-
-                        ArrayList<Group> mGroups = helper.getGroups();
-                        ArrayList<Student> mStudents = helper.getStudents();
-
-                        DataJson mDataJson = new DataJson(mGroups, mStudents);
-                        Gson gson = new GsonBuilder().create();
-                        String json = gson.toJson(mDataJson);
-                        saveExternalFile(folder, nameBackup, json);
-
-                        Toast.makeText(this, "Бекап создан", Toast.LENGTH_LONG).show();
+                        MyIntentService.createBackup(this, nameBackup);
                     }
                 } else {
                     requestPermission();
@@ -147,24 +140,7 @@ public class MainActivity extends AppCompatActivity {
 
                 if (hasPermission(Manifest.permission.READ_EXTERNAL_STORAGE)) {
                     if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
-                        File folder = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + "/MyFolder");
-
-                        String json = readExternalFile(folder, nameBackup);
-                        Gson gson =new GsonBuilder().create();
-                        DataJson mDataJson = gson.fromJson(json, DataJson.class);
-
-                        ArrayList<Group> mGroups = mDataJson.getGroups();
-                        ArrayList<Student> mStudents = mDataJson.getStudents();
-
-                        helper.deleteAll();
-                        Toast.makeText(this, "База очищена", Toast.LENGTH_LONG).show();
-
-                        helper.addGroups(mGroups);
-                        helper.addStudents(mStudents);
-
-                        Toast.makeText(this, "Бекап загружен", Toast.LENGTH_LONG).show();
-
-                        initList();
+                        MyIntentService.restoreBackup(this, nameBackup);
                     }
                 } else {
                     requestPermission();
@@ -172,47 +148,6 @@ public class MainActivity extends AppCompatActivity {
                 break;
         }
         return false;
-    }
-
-    private void saveExternalFile(File folder, String fileName, String data) {
-        try {
-            if (!folder.exists()) {
-                folder.mkdirs();
-            }
-            File file = new File(folder, fileName);
-
-            BufferedWriter writer =
-                    new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), "UTF8"));
-
-            writer.write(data);
-            writer.flush();
-            writer.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    private String readExternalFile(File folder, String fileName) {
-        try {
-            if (!folder.exists()) {
-                folder.mkdirs();
-            }
-            File file = new File(folder, fileName);
-
-            StringBuilder builder = new StringBuilder();
-            BufferedReader reader = new BufferedReader(new FileReader(file));
-            String line;
-
-            while ((line = reader.readLine()) != null) {
-                builder.append(line);
-            }
-
-            reader.close();
-            return builder.toString();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return null;
     }
 
     private boolean hasPermission(String permission) {
@@ -232,14 +167,9 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
     private void initList() {
-        ArrayList<Group> items = helper.getGroups();
-
-        mGroups.clear();
-        mGroups.addAll(items);
-
-        adapter.notifyDataSetChanged();
+        mProgressBar.setVisibility(View.VISIBLE);
+        MyIntentService.getGroups(this);
     }
 
     public void onClick(View view) {
@@ -258,9 +188,33 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (resultCode == RESULT_OK || requestCode == REQUEST_CODE) {
+        if (resultCode == RESULT_OK && requestCode == REQUEST_CODE) {
             if (data != null) {
                 initList();
+            }
+        } else if (requestCode == MyIntentService.REQUEST_CODE_GET_GROUPS) {
+            if (resultCode == RESULT_OK) {
+                if (data != null) {
+                    ArrayList<Group> items = data.getParcelableArrayListExtra(MyIntentService.EXTRA_GET_GROUPS);
+                    mGroups.clear();
+                    mGroups.addAll(items);
+                    adapter.notifyDataSetChanged();
+
+                    mProgressBar.setVisibility(View.INVISIBLE);
+                }
+            }
+
+        } else if (requestCode == MyIntentService.REQUEST_CODE_CREATE_BACKUP) {
+            if (resultCode == RESULT_OK) {
+                Toast.makeText(this, "Бекап создан", Toast.LENGTH_LONG).show();
+
+            }
+        } else if (requestCode == MyIntentService.REQUEST_CODE_RESTORE_BACKUP) {
+            if (resultCode == RESULT_OK) {
+                Toast.makeText(this, "База очищена", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, "Бекап загружен", Toast.LENGTH_LONG).show();
+                initList();
+
             }
         }
     }

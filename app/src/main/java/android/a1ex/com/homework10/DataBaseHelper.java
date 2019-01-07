@@ -201,7 +201,6 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         return student;
     }
 
-
     public ArrayList<Student> getStudents(){
         ArrayList<Student> students = new ArrayList<>();
         SQLiteDatabase db = getWritableDatabase();
